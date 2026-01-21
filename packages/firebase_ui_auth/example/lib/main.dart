@@ -2,6 +2,7 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
+import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'package:firebase_auth/firebase_auth.dart'
     hide PhoneAuthProvider, EmailAuthProvider;
 import 'package:firebase_core/firebase_core.dart';
@@ -11,10 +12,8 @@ import 'package:firebase_ui_oauth_apple/firebase_ui_oauth_apple.dart';
 import 'package:firebase_ui_oauth_facebook/firebase_ui_oauth_facebook.dart';
 import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';
 import 'package:firebase_ui_oauth_twitter/firebase_ui_oauth_twitter.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 
 import 'config.dart';
 import 'decorations.dart';
@@ -38,8 +37,6 @@ Future<void> main() async {
 
   FirebaseUIAuth.configureProviders([
     EmailAuthProvider(),
-    emailLinkProviderConfig,
-    PhoneAuthProvider(),
     GoogleProvider(clientId: GOOGLE_CLIENT_ID),
     AppleProvider(),
     FacebookProvider(clientId: FACEBOOK_CLIENT_ID),
@@ -264,8 +261,6 @@ class FirebaseAuthUIExample extends StatelessWidget {
           );
         },
         '/profile': (context) {
-          final platform = Theme.of(context).platform;
-
           return ProfileScreen(
             actions: [
               SignedOutAction((context) {
@@ -274,11 +269,33 @@ class FirebaseAuthUIExample extends StatelessWidget {
               mfaAction,
             ],
             actionCodeSettings: actionCodeSettings,
-            showMFATile: kIsWeb ||
-                platform == TargetPlatform.iOS ||
-                platform == TargetPlatform.android,
             showUnlinkConfirmationDialog: true,
             showDeleteConfirmationDialog: true,
+            deleteConfirmation: (context) async {
+              return await showDialog<bool>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Delete Account'),
+                      content: const Text(
+                        'Are you sure you want to delete your account? This action cannot be undone.',
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(false),
+                          child: const Text('Cancel'),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(true),
+                          style: TextButton.styleFrom(
+                            foregroundColor: Colors.red,
+                          ),
+                          child: const Text('Delete'),
+                        ),
+                      ],
+                    ),
+                  ) ??
+                  false;
+            },
           );
         },
       },
